@@ -4,32 +4,46 @@ package main
 
 import (
 	"fmt"
-	"github.com/looplab/fsm"
+	"github.com/Alagunto/fsm"
 )
 
 func main() {
 	fsm := fsm.NewFSM(
-		"closed",
+		"A",
 		fsm.Events{
-			{Name: "open", Src: []string{"closed"}, Dst: "open"},
-			{Name: "close", Src: []string{"open"}, Dst: "closed"},
+			{Name: "go", Src: []string{"A"}, Dst: "B"},
+			{Name: "loop", Src: []string{"C"}, Dst: "C"},
 		},
-		fsm.Callbacks{},
+		fsm.Callbacks{
+			"before_go": func(e *fsm.Event) {
+				e.FSM.SetDst("C")
+			},
+			"enter_C": func(e *fsm.Event) {
+				fmt.Println("Actually, i'm triggered")
+			},
+		},
 	)
 
 	fmt.Println(fsm.Current())
 
-	err := fsm.Event("open")
+	err := fsm.Event("go")
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	fmt.Println(fsm.Current())
 
-	err = fsm.Event("close")
+	err = fsm.Event("loop")
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	fmt.Println(fsm.Current())
+
+
+	//err = fsm.Event("lol")
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+
+	//fmt.Println(fsm.Current())
 }

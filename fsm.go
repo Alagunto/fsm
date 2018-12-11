@@ -25,6 +25,7 @@
 package fsm
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 )
@@ -56,7 +57,9 @@ type FSM struct {
 	// stateMu guards access to the current state.
 	stateMu sync.RWMutex
 	// eventMu guards access to Event() and Transition().
-	eventMu sync.Mutex
+	eventMu     sync.Mutex
+
+	intendedDst string
 }
 
 // EventDesc represents an event when initializing the FSM.
@@ -267,8 +270,8 @@ func (f *FSM) Cannot(event string) bool {
 // The last error should never occur in this situation and is a sign of an
 // internal bug.
 func (f *FSM) Event(event string, args ...interface{}) error {
-	f.eventMu.Lock()
-	defer f.eventMu.Unlock()
+	//f.eventMu.Lock()
+	//defer f.eventMu.Unlock()
 
 	f.stateMu.RLock()
 	defer f.stateMu.RUnlock()
@@ -287,6 +290,8 @@ func (f *FSM) Event(event string, args ...interface{}) error {
 		return UnknownEventError{event}
 	}
 
+	f.intendedDst = dst
+
 	e := &Event{f, event, f.current, dst, nil, args, false, false}
 
 	err := f.beforeEventCallbacks(e)
@@ -294,16 +299,19 @@ func (f *FSM) Event(event string, args ...interface{}) error {
 		return err
 	}
 
-	if f.current == dst {
-		f.afterEventCallbacks(e)
-		return NoTransitionError{e.Err}
-	}
+	//if f.current == dst {
+	//	f.afterEventCallbacks(e)
+		//return NoTransitionError{e.Err}
+	//}
 
 	// Setup the transition, call it later.
 	f.transition = func() {
 		f.stateMu.Lock()
-		f.current = dst
+		f.current = f.intendedDst
+		e.Dst = f.intendedDst
 		f.stateMu.Unlock()
+
+		fmt.Println("hello, dst is", e.Dst)
 
 		f.enterStateCallbacks(e)
 		f.afterEventCallbacks(e)
@@ -329,9 +337,13 @@ func (f *FSM) Event(event string, args ...interface{}) error {
 
 // Transition wraps transitioner.transition.
 func (f *FSM) Transition() error {
-	f.eventMu.Lock()
-	defer f.eventMu.Unlock()
+	//f.eventMu.Lock()
+	//defer f.eventMu.Unlock()
 	return f.doTransition()
+}
+
+func (f *FSM) SetDst(dst string) {
+	f.intendedDst = dst
 }
 
 // doTransition wraps transitioner.transition.

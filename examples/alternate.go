@@ -4,7 +4,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/looplab/fsm"
+	"github.com/Alagunto/fsm"
 )
 
 func main() {
