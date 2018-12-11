@@ -25,7 +25,6 @@
 package fsm
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 )
@@ -310,8 +309,6 @@ func (f *FSM) Event(event string, args ...interface{}) error {
 		f.current = f.intendedDst
 		e.Dst = f.intendedDst
 		f.stateMu.Unlock()
-
-		fmt.Println("hello, dst is", e.Dst)
 
 		f.enterStateCallbacks(e)
 		f.afterEventCallbacks(e)
